@@ -3,10 +3,10 @@
 (module+ test
   
   (require db
-           "../../../base.rkt"
-           "../../../testing/test-configuration.rkt"
-           "../common.rkt"
-           "../migrate-1-2.rkt"
+           admiral-edu/base
+           admiral-edu/tests/test-configuration
+           admiral-edu/database/mysql/common
+           admiral-edu/database/mysql/migrate-1-2
            rackunit)
   
   (current-configuration test-conf)

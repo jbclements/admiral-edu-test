@@ -28,14 +28,14 @@
   (module config info
     (define timeout 180))
 
-(require "../base.rkt"
-         "../testing/test-configuration.rkt"
-         "../database/mysql/common.rkt"
-         "../storage/storage.rkt"
-         "assignment.rkt"
-         "assignment-structs.rkt"
-         "assignment-parser.rkt"
-         "three-condition-study.rkt"
+(require admiral-edu/base
+         admiral-edu/tests/test-configuration
+         admiral-edu/database/mysql/common
+         admiral-edu/storage/storage
+         admiral-edu/authoring/assignment
+         admiral-edu/authoring/assignment-structs
+         admiral-edu/authoring/assignment-parser
+         admiral-edu/authoring/three-condition-study
          racket/file
          racket/set
          racket/runtime-path
