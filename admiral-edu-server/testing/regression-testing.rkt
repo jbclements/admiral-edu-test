@@ -227,7 +227,6 @@ u must add a summative comment at the end.
     `(((,m ())
        (200 ,(has-anchor-links
               '("/test-class/assignments/" "/test-class/roster/"))))
-      ;; REGRESSION: changed title
       ((,m ("assignments"))
        (200 ,(has-anchor-links
               '("/test-class/author/"))))

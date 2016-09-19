@@ -3,7 +3,8 @@
 (require rackunit
          html-parsing
          sxml
-         sexp-diff )
+         sexp-diff
+         "url-cleanup.rkt")
 
 ;; this is very ad-hoc right now... looking for a way to compare
 ;; the output of two regression test run outputs.
@@ -24,62 +25,6 @@
         (cond [(eof-object? r) '()]
               [else (cons r (loop))])))))
 
-
-;; how to compare trees? We're using sxml, but we want to ignore
-;; all of the extraneous whitespace that might not affect the
-;; equality (e.g. in the <head> element). Unfortunately, this is
-;; hard. So, as a non-conservative element, we just eliminate all
-;; strings containing only whitespace. This may accidentally make
-;; not-equal things into equal things, BUT not in a way that's
-;; likely to arise as the result of a bug in our code. We hope.
-
-;; given a single sxml element, remove all substrings that consist
-;; entirely of whitespace
-(define (sxml-eliminate-ws elt)
-  (match elt
-    [(cons (? symbol? tag) (cons (cons '@ attrs) rest))
-     (cons tag (cons (cons '@ attrs)
-                     (map sxml-eliminate-ws
-                          (filter (compose not ws-string?) rest))))]
-    [(cons (? symbol? tag) rest)
-     (cons tag
-           (map sxml-eliminate-ws
-                (filter (compose not ws-string?) rest)))]
-    [other other]))
-
-
-;; is this a string consisting only of whitespace?
-(define (ws-string? s)
-  (and (string? s) (regexp-match #px"^[[:space:]]*$" s)))
-
-(check-equal?
- (sxml-eliminate-ws
-  '(*TOP* (html
-           "\n" "\n" "  "
-           (head "\n" "    "
-                 (title " Captain Teach - Assignments ")
-                 "\n" "  ")
-           "\n" "\n" "\n"
-           (body "\n" "  "
-                 (h1 "Assignments")
-                 "\n"
-                 (p (a (@ (href "/test-class/author/")) "New Assignment"))
-                 "\n"
-                 (h2 "Open Assignments")
-                 "\n"
-                 (ul)
-                 "\n"
-                 (h2 "Closed Assignments")
-                 "\n" (ul) "\n") "\n")))
- '(*TOP* (html
-          (head (title " Captain Teach - Assignments "))
-          (body (h1 "Assignments")
-                (p (a (@ (href "/test-class/author/")) "New Assignment"))
-                (h2 "Open Assignments")
-                (ul)
-                (h2 "Closed Assignments")
-                (ul)))))
-
 ;; extract all links from a page
 (define (all-links xexp)
   (match xexp
@@ -95,9 +40,8 @@
     ;; not a tag
     [other '()]))
 
-(define TESTS-OF-INTEREST '(1))
-
-(pretty-print
+;; LINK EXTRACTION
+#;(pretty-print
  (for/list ([test-pre (in-list pre-change-tests)])
    (match test-pre
      [(list i n args (list 'web-server-returned-void _1 ...))
@@ -107,7 +51,143 @@
      
       (list i n args (all-links (html->xexp str-pre)))])))
 
-(/ 1 0)
+
+;; how to compare trees? We're using sxml, but we want to ignore
+;; all of the extraneous whitespace that might not affect the
+;; equality (e.g. in the <head> element). Unfortunately, this is
+;; hard. So, as a non-conservative element, we just eliminate all
+;; strings containing only whitespace. This may accidentally make
+;; not-equal things into equal things, BUT not in a way that's
+;; likely to arise as the result of a bug in our code. We hope.
+
+;; given a single sxml element, remove all substrings that consist
+;; entirely of whitespace
+(define (sxml-eliminate-ws elt)
+  (match elt
+    [(cons (? symbol? tag) (cons (cons '@ attrs) rest))
+     (cons tag (cons (cons '@ attrs)
+                     (sxml-eliminate-ws/subelts rest)))]
+    [(cons (? symbol? tag) rest)
+     (cons tag (sxml-eliminate-ws/subelts rest))]
+    [other other]))
+
+;; factoring out common subportion of sxml-eliminate-ws
+(define (sxml-eliminate-ws/subelts elts)
+  (special-case-cleanup
+   (map dump-trailing-url-slash
+   (filter (compose not ws-string?)
+           (ws-flatten (map sxml-eliminate-ws elts))))))
+
+;; take care of special cases:
+(define (special-case-cleanup elts)
+  (drop-leading-spaces
+   (match elts
+     [(list (? string? str))
+      ;; for a single string, trim the spaces on either side
+      (list (string-trim str))]
+     [other other])))
+
+;; remove trailing slashes from urls
+(define (dump-trailing-url-slash elt)
+  (match elt
+    [(list 'a (list '@ (list 'href url))
+           subelts ...)
+     `(a (@ (href ,(url-cleanup url))) ,@subelts)]
+    [(list 'form (list '@ (list 'action url) other-attrs ...) subelts ...)
+     `(form (@ (action ,(url-cleanup url)) ,@other-attrs) ,@subelts)]
+    [other other]))
+
+
+;; give a list of sxml elements,
+;; combine adjacent strings, replace all consecutive whitespace
+;; with a single space
+(define (ws-flatten loe)
+  (cond [(empty? loe) loe]
+        [else
+         (define done-rest (ws-flatten (rest loe)))
+         (match (first loe)
+           [(? string? s1)
+            (match done-rest
+              ['() (list s1)]
+              [(cons (? string? s2) r2)
+               (cons (strip-spaces (string-append s1 s2))
+                     r2)]
+              [(list 'h2 _ ...)
+               (cons (drop-trailing-space (strip-spaces s1))
+                     done-rest)]
+              [other
+               (cons (strip-spaces s1) done-rest)])]
+           [other (cons (first loe) done-rest)])]))
+
+;; drop a leading space from the first element
+(define (drop-leading-spaces elts)
+  (match elts
+    ['() '()]
+    [(cons (? string? s) r)
+     (cons (drop-leading-space s) r)]
+    [other other]))
+
+(define (drop-leading-space s)
+  (match s
+    [(regexp #px"^ *(.*)" (list _ m)) m]))
+
+;; given a string, replace consecutive
+;; whitespace with a single space
+(define (strip-spaces a)
+  (regexp-replace* #px"[[:space:]]+" a " "))
+
+;; is this a string consisting only of whitespace?
+(define (ws-string? s)
+  (and (string? s) (regexp-match #px"^[[:space:]]*$" s)))
+
+(check-equal? (strip-spaces " bc\n de \n de")
+              " bc de de")
+
+(define (drop-trailing-space str)
+  (match str
+    [(regexp #px"^(.*) $" (list _ sub)) sub]
+    [other other]))
+
+(check-equal? (drop-trailing-space "abc ") "abc")
+(check-equal? (drop-trailing-space "abc") "abc")
+
+(check-equal? (sxml-eliminate-ws `(html "\n " " " (head "bc" "  \n")))
+              `(html (head "bc")))
+
+(check-equal?
+ (sxml-eliminate-ws
+  '(*TOP* (html
+           "\n" "\n" "  "
+           (head "\n" "    "
+                 (title " Captain Teach - Assignments ")
+                 "\n" "  ")
+           "\n" "\n" "\n"
+           (body "\n" "  "
+                 (h1 "Assignments")
+                 "\n"
+                 (p (a (@ (href "/test-class/author/")) "New Ass" "ignment"))
+                 "\n"
+                 (h2 "Open Assignments")
+                 "\n"
+                 (ul)
+                 "\n"
+                 (h2 "Closed Assignments")
+                 "\n" (ul) "\n") "\n")))
+ '(*TOP* (html
+          (head (title "Captain Teach - Assignments"))
+          (body (h1 "Assignments")
+                (p (a (@ (href "/test-class/author")) "New Assignment"))
+                (h2 "Open Assignments")
+                (ul)
+                (h2 "Closed Assignments")
+                (ul)))))
+
+(define tests-to-ignore
+  '(bad-new-student))
+
+
+
+(define TESTS-OF-INTEREST '(6))
 
 (for ([test-pre (in-list pre-change-tests)]
       [test-post (in-list post-change-tests)])
@@ -124,13 +204,15 @@
   (match-define (list _ _ _ (list code-b code-msg-b ts-b encoding-post
                                   headers-b str-post))
     test-post)
+    ;; check that the tests are aligned. No point in comparing
+    ;; garbage.
   (unless (equal? (take test-pre 2)
                   (take test-post 2))
     (error 'test-comparison
            "expected first 2 elements to be the same, got ~e and ~e"
            (take test-pre 2) (take test-post 2)))
 
-  
+  (unless (member n tests-to-ignore)
     
   (test-case
    (~v (list i n args))
@@ -150,4 +232,5 @@
    (printf "diff on test ~v: ~v\n"
            i
            (sexp-diff parsed-pre parsed-post)))
-   (check-equal? parsed-post parsed-pre))))
+   (check-equal? parsed-post parsed-pre)))))
+
