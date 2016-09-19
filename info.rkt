@@ -4,19 +4,12 @@
 
 (define deps
   (list "base"
-        "db-lib"
-        "net-lib"
-        "rackunit-lib"
-        "typed-racket-lib"
-        "web-server-lib"
-        "aws"
-        "yaml"
-        "quickcheck"
-        ;; for testing:
-        "html-parsing"))
+        "admiral-edu"))
+(define build-implies
+  (list "admiral-edu"))
 
-(define build-deps
-  (list "typed-racket-more"))
+(define pkg-desc "tests for admiral edu")
+
 
 
 

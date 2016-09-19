@@ -2,6 +2,9 @@
 
 (require math/statistics)
 
+;; no tests for this file
+(module* test racket/base)
+
 ;; looks like it might be a good place to split input???
 (define splitter
   (byte-regexp (regexp-quote (bytes #x01 #x55 #xbc))))
