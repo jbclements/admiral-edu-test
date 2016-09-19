@@ -1,8 +1,8 @@
 #lang typed/racket/base
 
-(require "../database/mysql/review.rkt"
-         "../storage/storage.rkt"
-         "./testing-shim.rkt"
+(require admiral-edu/database/mysql/review
+         admiral-edu/storage/storage
+         admiral-edu/tests/testing-shim
          racket/match)
 
 ;; grotty back doors into the system to deal with

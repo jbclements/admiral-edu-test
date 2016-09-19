@@ -3,11 +3,11 @@
 ;; this file exists to deal with the API differences between
 ;; old and new server.
 
-(require "./test-configuration.rkt"
-         "../pages/errors.rkt"
-         "../storage/storage.rkt"
-         "../base.rkt"
-         "../paths.rkt"
+(require admiral-edu/tests/test-configuration
+         admiral-edu/pages/errors
+         admiral-edu/storage/storage
+         admiral-edu/base
+         admiral-edu/paths
          racket/file)
 
 (provide (all-defined-out))

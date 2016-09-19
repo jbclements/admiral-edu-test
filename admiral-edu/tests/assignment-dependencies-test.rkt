@@ -1,11 +1,11 @@
 #lang racket/base
 
 (module+ test
-  (require "../base.rkt"
-           "../testing/test-configuration.rkt"
-           "assignment.rkt"
-           "assignment-structs.rkt"
-           "next-action.rkt"
+  (require admiral-edu/base
+           admiral-edu/tests/test-configuration
+           admiral-edu/authoring/assignment
+           admiral-edu/authoring/assignment-structs
+           admiral-edu/authoring/next-action
            racket/hash
            rackunit)
   

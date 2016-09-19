@@ -122,7 +122,7 @@
                                (string-length l)))
          l))
 
-;; RIGHT HERE add check for text/plain MIME type
+;; check for text/plain MIME type
 (define (has-plain-text-mime-type result)
   (define mime-type (bytes->string/utf-8 (fourth result)))
   (check-match mime-type

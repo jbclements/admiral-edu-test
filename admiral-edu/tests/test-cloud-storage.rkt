@@ -10,9 +10,9 @@
 ;; no testing for this ...
 (module* test racket/base)
 
-(require "../configuration.rkt"
-         "test-configuration.rkt"
-         "../storage/storage-basic.rkt"
+(require admiral-edu/configuration
+         admiral-edu/tests/test-configuration
+         admiral-edu/storage/storage-basic
          racket/hash
          rackunit)
 

@@ -16,8 +16,8 @@
            web-server/http/request-structs
            rackunit
            rackunit/text-ui
-           "../dispatch.rkt"
-           "../base.rkt"
+           admiral-edu/dispatch
+           admiral-edu/base
            "testing-shim.rkt"
            "testing-back-doors.rkt"
            "testing-support.rkt")

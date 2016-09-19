@@ -117,6 +117,7 @@
                      done-rest)]
               [other
                (cons (strip-spaces s1) done-rest)])]
+           ;; this could get very ugly...
            [other (cons (first loe) done-rest)])]))
 
 ;; drop a leading space from the first element
@@ -183,11 +184,14 @@
                 (ul)))))
 
 (define tests-to-ignore
-  '(bad-new-student))
+  '(bad-new-student ;; old one had different context
+    same-student-again ;; old one missing <p> wrapper
+
+    ))
 
 
 
-(define TESTS-OF-INTEREST '(6))
+(define TESTS-OF-INTEREST '(4))
 
 (for ([test-pre (in-list pre-change-tests)]
       [test-post (in-list post-change-tests)])
@@ -198,16 +202,16 @@
                               test-pre)
                      #f)])
   
-  (match-define (list i n args (list code-a code-msg-a ts-a encoding-pre
+  (match-define (list i _ args (list code-a code-msg-a ts-a encoding-pre
                                      headers-a str-pre))
     test-pre)
-  (match-define (list _ _ _ (list code-b code-msg-b ts-b encoding-post
+  (match-define (list _ n _ (list code-b code-msg-b ts-b encoding-post
                                   headers-b str-post))
     test-post)
     ;; check that the tests are aligned. No point in comparing
     ;; garbage.
-  (unless (equal? (take test-pre 2)
-                  (take test-post 2))
+  (unless (equal? (list (first test-pre) (third test-pre))
+                  (list (first test-post) (third test-post)))
     (error 'test-comparison
            "expected first 2 elements to be the same, got ~e and ~e"
            (take test-pre 2) (take test-post 2)))

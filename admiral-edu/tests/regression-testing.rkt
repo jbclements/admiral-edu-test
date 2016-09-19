@@ -18,8 +18,8 @@
            rackunit
            rackunit/text-ui
            html-parsing
-           "../dispatch.rkt"
-           "../base.rkt"
+           admiral-edu/dispatch
+           admiral-edu/base
            "testing-shim.rkt"
            "testing-support.rkt"
            "testing-back-doors.rkt"
@@ -244,11 +244,12 @@ u must add a summative comment at the end.
       ((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))
                #t) 200)
-      ;; create same student again? yes, that's legal
+      ;; create same student again
       ((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))
                #t)
-       200)
+       200
+       same-student-again)
       ((,m ("author"))
        (200 ,(has-anchor-links '("javascript:validate()"))))
       ;; NON-REGRESSION: new version better than old

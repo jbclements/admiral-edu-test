@@ -1,8 +1,8 @@
 #lang racket
 
-(require "../storage/storage-basic.rkt"
-         "../configuration.rkt"
-         "test-configuration.rkt"
+(require admiral-edu/storage/storage-basic
+         admiral-edu/configuration
+         admiral-edu/tests/test-configuration
          racket/hash)
 
 ;; copied from test-configuration.rkt because of

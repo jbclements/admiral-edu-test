@@ -6,12 +6,12 @@
 (module+ main
   (require web-server/servlet-dispatch
            web-server/web-server
-           "../dispatch.rkt"
-           "../base.rkt"
-           "../storage/storage-basic.rkt"
-           "../util/config-file-reader.rkt"
+           admiral-edu/dispatch
+           admiral-edu/base
+           admiral-edu/storage/storage-basic
+           admiral-edu/util/config-file-reader
            net/url
-           "test-configuration.rkt"
+           admiral-edu/tests/test-configuration
            rackunit
            rackunit/text-ui)
 

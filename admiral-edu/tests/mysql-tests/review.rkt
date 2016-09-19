@@ -2,10 +2,10 @@
 
 (module+ test
 
-(require "../review.rkt"
-         "../typed-db.rkt"
-         "../../../base.rkt"
-         "../../../testing/test-configuration.rkt"
+(require admiral-edu/database/mysql/review
+         admiral-edu/database/mysql/typed-db
+         admiral-edu/base
+         admiral-edu/tests/test-configuration
          rackunit)
 
   (current-configuration test-conf)

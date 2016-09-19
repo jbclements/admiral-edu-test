@@ -11,9 +11,9 @@
                       web-server/dispatchers/dispatch-files)
            web-server/dispatchers/filesystem-map
            web-server/web-server
-           "../dispatch.rkt"
-           "../base.rkt"
-           "../auth/google-openidc.rkt"
+           admiral-edu/dispatch
+           admiral-edu/base
+           admiral-edu/auth/google-openidc
            "testing-shim.rkt")
 
   (define STATIC-FILES-ROOT
@@ -42,12 +42,11 @@
                           (dispatch/servlet ct-rules-2))
            #:port (ct-port)))
   
-  (require "../util/roster.rkt")
-  (require "../authoring/assignment.rkt")
+  (require admiral-edu/util/roster)
+  (require admiral-edu/authoring/assignment)
+  (require admiral-edu/storage/storage)
   
-  (require "../storage/storage.rkt")
-  
-  (require (only-in "../database/mysql/assignment.rkt"
+  (require (only-in admiral-edu/database/mysql/assignment
                     open))
   (define (run-some-setup)
   (printf "Adding student to roster\n")
