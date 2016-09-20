@@ -4,7 +4,8 @@
          html-parsing
          sxml
          sexp-diff
-         "url-cleanup.rkt")
+         "url-cleanup.rkt"
+         "test-edits.rkt")
 
 ;; this is very ad-hoc right now... looking for a way to compare
 ;; the output of two regression test run outputs.
@@ -182,6 +183,17 @@
                 (ul)
                 (h2 "Closed Assignments")
                 (ul)))))
+
+(define ((sxml-replace from to) sxml)
+  (cond [(equal? sxml from) to]
+        [else
+         (match sxml
+           [(list 'tag (list '@ attrs ...) subelts ...)
+            `(,tag (@ ,@attrs) (map (sxml-replace from to) subelts))]
+           [(list 'tag subelts ...)
+            `(,tag (map (sxml-replace from to) subelts))]
+           [other other])]))
+;; RIGHT HERE : apply sxml-replace to the appropriate args for each test
 
 (define tests-to-ignore
   '(bad-new-student ;; old one had different context
