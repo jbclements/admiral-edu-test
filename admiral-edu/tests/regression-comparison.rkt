@@ -239,14 +239,19 @@
   '(bad-new-student ;; old one had different context
     bad-author-post ;; old one crashed
     bad-author-path ;; old one returned <void>
-    bad-yaml ;; old one returned application/json
+    bad-yaml ;; new one has radically better error text
+    ))
+
+(define ignore-encoding-tests
+  '(bad-yaml ;; old one returned application/json
     boguspath-validate ;; old one returned application/json
     existing-assignment ;; old one returned application/json
+    good-validate ;; old one returned application/json
     ))
 
 
 
-(define TESTS-OF-INTEREST '(11))
+(define TESTS-OF-INTEREST '(13))
 
 (for ([test-pre (in-list pre-change-tests)]
       [test-post (in-list post-change-tests)])
@@ -257,40 +262,41 @@
                               test-pre)
                      #f)])
   
-  (match-define (list i _ args (list code-a code-msg-a ts-a encoding-pre
-                                     headers-a str-pre))
-    test-pre)
-  (match-define (list _ n _ (list code-b code-msg-b ts-b encoding-post
-                                  headers-b str-post))
-    test-post)
+    (match-define (list i _ args (list code-a code-msg-a ts-a encoding-pre
+                                       headers-a str-pre))
+      test-pre)
+    (match-define (list _ n _ (list code-b code-msg-b ts-b encoding-post
+                                    headers-b str-post))
+      test-post)
     ;; check that the tests are aligned. No point in comparing
     ;; garbage.
-  (unless (equal? (list (first test-pre) (third test-pre))
-                  (list (first test-post) (third test-post)))
-    (error 'test-comparison
-           "expected first 2 elements to be the same, got ~e and ~e"
-           (take test-pre 2) (take test-post 2)))
+    (unless (equal? (list (first test-pre) (third test-pre))
+                    (list (first test-post) (third test-post)))
+      (error 'test-comparison
+             "expected first 2 elements to be the same, got ~e and ~e"
+             (take test-pre 2) (take test-post 2)))
 
     (unless (member n tests-to-ignore)
     
-  (test-case
-   (~v (list i n args))
-   ;; ignore differences in codes; these are
-   ;; the subject of correctness tests:
-   #;(check-equal? code-b code-a)
-   #;(check-equal? code-msg-b code-msg-a)
-   ;; ignore timestamp...
-   (check-equal? encoding-post encoding-pre)
-   ;; ignore headers...
-   #;(check-equal? headers-b headers-a)
-   ;; not clear how to parse these...
-   (define parsed-post (sxml-eliminate-ws (html->xexp str-post)))
-   (define parsed-pre (sxml-eliminate-ws (html->xexp str-pre)))
-   (define rewritten-pre (make-test-edits n parsed-pre))
+      (test-case
+       (~v (list i n args))
+       ;; ignore differences in codes; these are
+       ;; the subject of correctness tests:
+       #;(check-equal? code-b code-a)
+       #;(check-equal? code-msg-b code-msg-a)
+       ;; ignore timestamp...
+       (unless (member n ignore-encoding-tests)
+         (check-equal? encoding-post encoding-pre))
+       ;; ignore headers...
+       #;(check-equal? headers-b headers-a)
+       ;; not clear how to parse these...
+       (define parsed-post (sxml-eliminate-ws (html->xexp str-post)))
+       (define parsed-pre (sxml-eliminate-ws (html->xexp str-pre)))
+       (define rewritten-pre (make-test-edits n parsed-pre))
 
-   (when (member i TESTS-OF-INTEREST)
-   (printf "diff on test ~v: ~v\n"
-           i
-           (sexp-diff rewritten-pre parsed-post)))
-   (check-equal? parsed-post rewritten-pre)))))
+       (when (member i TESTS-OF-INTEREST)
+         (printf "diff on test ~v: ~v\n"
+                 i
+                 (sexp-diff rewritten-pre parsed-post)))
+       (check-equal? parsed-post rewritten-pre)))))
 

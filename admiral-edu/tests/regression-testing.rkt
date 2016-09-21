@@ -284,8 +284,7 @@ u must add a summative comment at the end.
        existing-assignment)
       ((,m ("author" "validate") () #t ,yaml-with-html)
        (200 ,has-plain-text-mime-type)
-       ;; RIGHT HERE, adding name
-       )
+       good-validate)
       ;; REGRESSION: missing title
       ((,m ("assignments"))
        (200 ,(has-anchor-links

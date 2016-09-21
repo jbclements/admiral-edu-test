@@ -20,4 +20,8 @@
        "callback){ console.log(\"Attempting to save to \" + \"'validate'\"); var "
        "xhr = new XMLHttpRequest(); xhr.open(\"POST\", \"'validate'\", true); xhr"
        ".setRequestHeader('Content-Type', 'application/json; charset=UTF-8'); xhr"
-       ".send(content); xhr.onloadend = callback; } function load(callback){ }"))))))
+       ".send(content); xhr.onloadend = callback; } function load(callback){ }"))))
+    (existing-assignment
+     (replace-with
+      "The specified assignment id 'a1-ct' already exists."
+      ("Fail: The specified assignment id 'a1-ct' already exists.")))))
