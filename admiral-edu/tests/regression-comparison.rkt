@@ -5,7 +5,7 @@
          sxml
          sexp-diff
          "url-cleanup.rkt"
-         "test-edits.rkt")
+         "regression-edits.rkt")
 
 ;; this is very ad-hoc right now... looking for a way to compare
 ;; the output of two regression test run outputs.
@@ -183,34 +183,77 @@
                 (ul)
                 (h2 "Closed Assignments")
                 (ul)))))
+;; given two terms and an sxml term, replace every instance of 'from'
+;; with 'to', return a *list* of results, to allow flattening and
+;; disappearing.
+(define (sxml-replace from to sxml)
+  (unless (list? to)
+    (raise-argument-error 'sxml-replace
+                          "list" 1 from to sxml))
+  (define replaced
+    (let loop ([sxml sxml])
+      (cond [(equal? sxml from) to]
+            [else
+             (match sxml
+               [(list tag (list '@ attrs ...) subelts ...)
+                (list
+                 `(,tag (@ ,@attrs)
+                       ,@(apply append (map loop subelts))))]
+               [(list tag subelts ...)
+                (list `(,tag ,@(apply append (map loop subelts))))]
+               [other (list other)])])))
+  (match replaced
+    [(list val) val]
+    [other (error 'sxml-replace
+                  "expected list of length one, got: ~e"
+                  replaced)]))
 
-(define ((sxml-replace from to) sxml)
-  (cond [(equal? sxml from) to]
-        [else
-         (match sxml
-           [(list 'tag (list '@ attrs ...) subelts ...)
-            `(,tag (@ ,@attrs) (map (sxml-replace from to) subelts))]
-           [(list 'tag subelts ...)
-            `(,tag (map (sxml-replace from to) subelts))]
-           [other other])]))
-;; RIGHT HERE : apply sxml-replace to the appropriate args for each test
+(check-equal? (sxml-replace "abc" '("def")
+                            '(a (@ (abc "abc") (aaa "d,,hp"))
+                                "abc"))
+              '(a (@ (abc "abc") (aaa "d,,hp"))
+                  "def"))
+
+(check-equal? (sxml-replace "abc" '("def" "ghi")
+                            '(a (@ (abc "abc") (aaa "d,,hp"))
+                                "abc"))
+              '(a (@ (abc "abc") (aaa "d,,hp"))
+                  "def" "ghi"))
+
+;; given a name and the old
+(define (make-test-edits name sxml)
+  (define changes-to-apply
+    (filter (λ (change) (eq? (first change) name))
+            test-edits))
+  (for/fold ([updated sxml])
+            ([t (in-list (map second changes-to-apply))])
+    (match t
+      [(list 'replace-with from to)
+       (sxml-replace from to updated)]
+      [other
+       (error 'bad-pattern
+              "bad pattern: ~e\n"
+              t)])))
 
 (define tests-to-ignore
   '(bad-new-student ;; old one had different context
-    same-student-again ;; old one missing <p> wrapper
-
+    bad-author-post ;; old one crashed
+    bad-author-path ;; old one returned <void>
+    bad-yaml ;; old one returned application/json
+    boguspath-validate ;; old one returned application/json
+    existing-assignment ;; old one returned application/json
     ))
 
 
 
-(define TESTS-OF-INTEREST '(4))
+(define TESTS-OF-INTEREST '(11))
 
 (for ([test-pre (in-list pre-change-tests)]
       [test-post (in-list post-change-tests)])
   (with-handlers ([exn:fail?
                    (λ (exn)
                      (fprintf (current-error-port)
-                              "test meltdown on test: ~e"
+                              "test meltdown on test: ~e\n"
                               test-pre)
                      #f)])
   
@@ -228,7 +271,7 @@
            "expected first 2 elements to be the same, got ~e and ~e"
            (take test-pre 2) (take test-post 2)))
 
-  (unless (member n tests-to-ignore)
+    (unless (member n tests-to-ignore)
     
   (test-case
    (~v (list i n args))
@@ -243,10 +286,11 @@
    ;; not clear how to parse these...
    (define parsed-post (sxml-eliminate-ws (html->xexp str-post)))
    (define parsed-pre (sxml-eliminate-ws (html->xexp str-pre)))
+   (define rewritten-pre (make-test-edits n parsed-pre))
 
    (when (member i TESTS-OF-INTEREST)
    (printf "diff on test ~v: ~v\n"
            i
-           (sexp-diff parsed-pre parsed-post)))
-   (check-equal? parsed-post parsed-pre)))))
+           (sexp-diff rewritten-pre parsed-post)))
+   (check-equal? parsed-post rewritten-pre)))))
 

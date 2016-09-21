@@ -251,7 +251,8 @@ u must add a summative comment at the end.
        200
        same-student-again)
       ((,m ("author"))
-       (200 ,(has-anchor-links '("javascript:validate()"))))
+       (200 ,(has-anchor-links '("javascript:validate()")))
+       author-page)
       ;; NON-REGRESSION: new version better than old
       ((,m ("author") () #t #"assignment-id : zzz1")
        404
@@ -282,7 +283,9 @@ u must add a summative comment at the end.
               (starts-with-string "Fail:")))
        existing-assignment)
       ((,m ("author" "validate") () #t ,yaml-with-html)
-       (200 ,has-plain-text-mime-type))
+       (200 ,has-plain-text-mime-type)
+       ;; RIGHT HERE, adding name
+       )
       ;; REGRESSION: missing title
       ((,m ("assignments"))
        (200 ,(has-anchor-links
