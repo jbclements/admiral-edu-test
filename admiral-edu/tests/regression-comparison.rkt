@@ -251,7 +251,7 @@
 
 
 
-(define TESTS-OF-INTEREST '(13))
+(define TESTS-OF-INTEREST '(7))
 
 (for ([test-pre (in-list pre-change-tests)]
       [test-post (in-list post-change-tests)])
