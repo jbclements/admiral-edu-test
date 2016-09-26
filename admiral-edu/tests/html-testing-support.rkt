@@ -26,10 +26,14 @@
 
 ;; given a link, return a predicate usable with ormap-xexp
 (define (anchor-link-equal? l)
-  (define trimmed (trim-trailing-slash l))
+  ;; yikes, trailing slashes are going to matter for relative URLs that
+  ;; build on the existing paths.
+  (anchor-link/pred?
+   (λ (link) (equal? link l)))
+  #;((define trimmed (trim-trailing-slash l))
   (anchor-link/pred?
    (λ (link) (or (equal? link trimmed)
-                 (equal? link (string-append trimmed "/"))))))
+                 (equal? link (string-append trimmed "/")))))))
 
 ;; trim a trailing slash off of a string that ends with one
 (define (trim-trailing-slash s)
