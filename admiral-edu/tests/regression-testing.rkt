@@ -448,11 +448,20 @@ u must add a summative comment at the end.
       ((,stu2 ("submit" "test-with-html" "tests")
               (multipart
                ((namefilevalue
-                 #"file" #"a-third-file" () #"zzz\n\nzzz\nzzz\n")))
+                 #"file" #"a-third-file.arr" () #"zzz\n\nzzz\nzzz\n")))
               #t)
        (200 ,(has-anchor-links
               '("/test-class/next/test-with-html/")))
        stu2-submits)
+      ;; re-submit of same file with same extension
+      ((,stu2 ("submit" "test-with-html" "tests")
+              (multipart
+               ((namefilevalue
+                 #"file" #"a-third-file.arr" () #"zzz\n\nzzz\nzzz\ndcalfine")))
+              #t)
+       (200 ,(has-anchor-links
+              '("/test-class/next/test-with-html/")))
+       stu2-re-submits)
       ;; can stu2 read stu1's file? No. Good.
       ((,stu2 ("browse" "test-with-html" "tests" "my-diff? erent-file"))
        403
