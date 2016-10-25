@@ -14,6 +14,8 @@
            racket/list
            racket/match
            racket/contract
+           racket/runtime-path
+           racket/file
            web-server/http/response-structs
            rackunit
            rackunit/text-ui
@@ -24,6 +26,8 @@
            "testing-support.rkt"
            "testing-back-doors.rkt"
            "html-testing-support.rkt")
+
+  (define-runtime-path HERE ".")
 
   ;; this one is persistent
   (define REGRESSION-FILE-PATH-PERSISTENT
@@ -106,11 +110,14 @@
 
 
   (define m (master-user-shim))
-  (define stu1 "frogstar@example.com")
+  (define stu1 "stu1@example.com")
   (define stu2 "mf2@example.com")
+  (define stu3 "stu3@example.com")
   ;; not in the class, ever:
   (define stu9 "stu9@example.com")
 
+  (define zipfile-bytes (file->bytes (build-path HERE "tiny.zip")))
+  
   (define assignment-yaml #"name: Assignment 1 Captain Teach
 id: a1-ct
 description: Problem 3.3.3 Solution
@@ -183,7 +190,7 @@ u must add a summative comment at the end.
   (define ct-test? (flat-contract-predicate ct-test/c))
   
   #;(check-equal? ((flat-contract-predicate ct-call-params/c)
-                 '("masteruser@example.com" ("roster" "new-student") ((action . "create-student") (uid . "frogstar@example.com")) #t))
+                 `("masteruser@example.com" ("roster" "new-student") ((action . "create-student") (uid . ,stu1)) #t))
                 #t)
 
   ;; some tests are known not to pass on the old version. Run the code and
@@ -646,7 +653,18 @@ u must add a summative comment at the end.
        upload-bad-roster)
       ((,m ("download" "abcde"))
        404
-       download-no-path)))
+       download-no-path)
+      ;; create new user, try uploading zip file
+      ((,m ("roster" "new-student") (alist ((action . "create-student")
+                                            (uid . ,stu3)))
+               #t) 200)
+      ((,stu3 ("submit" "test-with-html" "tests")
+              (multipart
+               ((namefilevalue #"file" #"tiny.zip" ()
+                               ,zipfile-bytes)))
+              #t)
+       (200 ,(has-anchor-links
+              '("/test-class/next/test-with-html/"))))))
 
 
   ;; check that no two tests have the same name
