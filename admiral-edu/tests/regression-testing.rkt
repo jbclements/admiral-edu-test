@@ -221,7 +221,8 @@ u must add a summative comment at the end.
       assignment-description-xss
       assignment-description-xss-2
       stu1-not-yet-published
-      stu1-submits-feedback-xss))
+      stu1-submits-feedback-xss
+      stu3-not-yet-published))
   
   ;; a test contains three parts: expected, call, and (optionally) a name.
   ;; a test (currently) consists of a list
@@ -406,7 +407,11 @@ u must add a summative comment at the end.
           '("/test-class/next/test-with-html/")))
        stu1-resubmits)
       ((,stu1 ("next" "test-with-html"))
-       200
+       (200 ,(begin
+               (has-form-submit-links
+                '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
+               (has-iframe-link
+                "/test-class/next/test-with-html/../../browse/test-with-html/tests/")))
        stu1-not-yet-published)
       ;; content of the iframe:
       ((,stu1 ("browse" "test-with-html" "tests"))
@@ -664,7 +669,17 @@ u must add a summative comment at the end.
                                ,zipfile-bytes)))
               #t)
        (200 ,(has-anchor-links
-              '("/test-class/next/test-with-html/"))))))
+              '("/test-class/next/test-with-html/"))))
+      ((,stu3 ("next" "test-with-html"))
+       (200
+        ,(begin
+           (has-form-submit-links
+            '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
+           (has-iframe-link
+            "/test-class/next/test-with-html/../../browse/test-with-html/tests/")
+           (hasnt-string
+            "Your submission contains no files.")))
+       stu3-not-yet-published)))
 
 
   ;; check that no two tests have the same name

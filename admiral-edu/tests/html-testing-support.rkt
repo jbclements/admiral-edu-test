@@ -9,9 +9,11 @@
          has-anchor-link/bool
          has-anchor-links
          has-anchor-links/bool
+         has-form-submit-links
          has-iframe-link
          ormap-xexp
          has-string
+         hasnt-string
          is-string
          starts-with-string
          has-plain-text-mime-type
@@ -28,12 +30,11 @@
 (define (anchor-link-equal? l)
   ;; yikes, trailing slashes are going to matter for relative URLs that
   ;; build on the existing paths.
-  (anchor-link/pred?
-   (λ (link) (equal? link l)))
-  #;((define trimmed (trim-trailing-slash l))
-  (anchor-link/pred?
-   (λ (link) (or (equal? link trimmed)
-                 (equal? link (string-append trimmed "/")))))))
+  (anchor-link/pred? (λ (link) (equal? link l))))
+
+;; given a link, return a predicate usable with ormap-xexp
+(define (form-submit-link-equal? l)
+  (form-submit-link/pred? (λ (link) (equal? link l))))
 
 ;; trim a trailing slash off of a string that ends with one
 (define (trim-trailing-slash s)
@@ -48,7 +49,7 @@
 
 ;; given a link, return a predicate usable with ormap-xexp
 (define (anchor-link-matches? pat)
-  (anchor-link/pred? (λ (link) (not (not (regexp-match pat link))))))
+  (anchor-link/pred? (λ (link) (regexp-match? pat link))))
 
 (define (anchor-link/pred? pred)
   (λ (e) (match e
@@ -57,13 +58,32 @@
             (pred link)]
            [other #f])))
 
+;; given a link, returns a predicate usable with ormap-xexp
+(define (form-submit-link-matches? pat)
+  (form-submit-link/pred? (λ (link) (regexp-match? pat link))))
+
+;; matches an xexpr that is a form whose action matches the given
+;; predicate.
+(define (form-submit-link/pred? pred)
+  (λ (e) (match e
+           [(list 'form (list '@ _1 ... (list 'action link) _2 ...) _3 ...)
+            (pred link)]
+           [other #f])))
+
 
 
 ;; does the result contain an <a> element with an href of
-;; the form /test-class/[l] ? Performs a check.
+;; l ? Performs a check.
 (define ((has-anchor-link l) result)
   (check ormap-xexp
          (anchor-link-equal? l)
+         (html->xexp (sixth result))))
+
+;; does the result contain a form with the specified link as its
+;; action? Performs a check.
+(define ((has-form-submit-link l) result)
+  (check ormap-xexp
+         (form-submit-link-equal? l)
          (html->xexp (sixth result))))
 
 ;; does the result contain an <a> element with an href whose
@@ -73,8 +93,7 @@
          (anchor-link-equal? l)
          (html->xexp (sixth result))))
 
-;; does the result contain an <a> element with an href of
-;; the form /test-class/[l] ?
+;; does the result contain an <a> element with an href of l ?
 (define ((has-anchor-link/bool l) result)
   (ormap-xexp
    (anchor-link-equal? l)
@@ -89,6 +108,10 @@
 ;; than performing the check.
 (define ((has-anchor-links/bool ls) result)
   (andmap (λ (l) ((has-anchor-link/bool l) result)) ls))
+
+;; andmap over has-form-submit-link. performs checks
+(define ((has-form-submit-links ls) result)
+  (for-each (λ (l) ((has-form-submit-link l) result)) ls))
 
 (define ((has-iframe-link l) result)
   (check ormap-xexp
@@ -118,6 +141,10 @@
 ;; given a result, check that the response string contains the given text
 (define ((has-string l) result)
   (check string-contains? (sixth result) l))
+
+;; given a result, check that the response string doesn't contain the given text
+(define ((hasnt-string l) result)
+  (check (compose not string-contains?) (sixth result) l))
 
 (define ((starts-with-string l) result)
   (define str (sixth result))
