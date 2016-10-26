@@ -10,6 +10,9 @@
 ;; this is very ad-hoc right now... looking for a way to compare
 ;; the output of two regression test run outputs.
 
+;; don't use this as part of automated testing, yet:
+(module* test racket/base)
+
 (define pre-change-tests
   (call-with-input-file "regression-results-pre.rktd"
     (λ (port)
