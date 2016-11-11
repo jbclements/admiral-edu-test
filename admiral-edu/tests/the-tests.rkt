@@ -11,8 +11,7 @@
 
 (provide
  (contract-out
-  [tests (listof ct-test/c)]
-  [zip-with-dirs-tests (listof ct-test/c)]
+  [names-and-testseqs (listof (list/c string? (listof ct-test/c)))]
   [master-user-name string?]))
 
 (define-runtime-path HERE ".")
@@ -127,15 +126,13 @@ u must add a summative comment at the end.
 ")
 
 
-;; a test contains three parts: expected, call, and (optionally) a name.
-;; a test (currently) consists of a list
-;; containing the expected status code and the
-;; arguments to pass to run-request.
-;; GRR! In order to allow hashes to be extracted
-;; from earlier requests, must allow request args
-;; to be thunked. 
-(define tests
-  `(((,m ())
+
+(define zipfile-with-dirs-bytes
+  (file->bytes (build-path HERE "zip-with-subdir.zip")))
+
+(define names-and-testseqs
+  `(("basic"
+    (((,m ())
      (200 ,(has-anchor-links
             '("/test-class/assignments/" "/test-class/roster/"))))
     ((,m ("assignments"))
@@ -585,12 +582,8 @@ u must add a summative comment at the end.
      stu3-not-yet-published)
     ;; now navigate to subdirectory, then submit
     ))
-
-(define zipfile-with-dirs-bytes
-  (file->bytes (build-path HERE "zip-with-subdir.zip")))
-
-(define zip-with-dirs-tests
-  `(((,m ("roster" "new-student") (alist ((action . "create-student")
+    ("zip with subdirs"
+     (((,m ("roster" "new-student") (alist ((action . "create-student")
                                           (uid . ,stu1)))
          #t) 200)
     ((,m ("author" "validate") () #t ,assignment-yaml)
@@ -600,4 +593,29 @@ u must add a summative comment at the end.
           ((namefilevalue #"file-1" #"file-1" () #"abcd")
            (namefilevalue #"file-2" #"grogra-2" () #"efgh")))
          #t)
-     200)))
+     200)
+    ((,m ("assignments" "open" "a1-ct"))
+     200)
+    ((,stu1 ("submit" "test-with-html" "tests")
+            (multipart
+             ((namefilevalue #"file" #"tiny.zip" ()
+                             ,zipfile-with-dirs-bytes)))
+            #t)
+     200)
+    ((,stu1 ("next" "test-with-html"))
+     (200
+      ,(begin
+         (has-form-submit-links
+          '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
+         (has-iframe-link
+          "/test-class/next/test-with-html/../../browse/test-with-html/tests/")
+         (hasnt-string
+          "Your submission contains no files.")))
+     )))
+    ("db bug"
+     (((,m ("roster" "new-student") (alist ((action . "create-student")
+                                            (uid . ,stu1)))
+           #t) 200)
+      ((,stu1 ("next" "bogus-assignment")) 404)))))
+
+
