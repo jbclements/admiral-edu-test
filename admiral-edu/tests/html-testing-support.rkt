@@ -5,12 +5,12 @@
 
 (provide no-italics
          anchor-link-equal?
-         has-anchor-link
+         check-anchor-link
          has-anchor-link/bool
-         has-anchor-links
+         check-anchor-links
          has-anchor-links/bool
-         has-form-submit-links
-         has-iframe-link
+         check-form-submit-links
+         check-iframe-link
          ormap-xexp
          has-string
          hasnt-string
@@ -20,8 +20,8 @@
          no-double-encode
          and/p)
 
-(define (and/p p1 p2)
-  (λ (x) (and (p1 x) (p2 x))))
+(define (and/p . preds)
+  (λ (x) (andmap (λ (p) (p x)) preds)))
 
 (define (no-italics result)
   (check (compose not string-contains?) (sixth result) "<i>"))
@@ -74,17 +74,23 @@
 
 ;; does the result contain an <a> element with an href of
 ;; l ? Performs a check.
-(define ((has-anchor-link l) result)
-  (check ormap-xexp
-         (anchor-link-equal? l)
+(define ((check-anchor-link l) result)
+  (check has-anchor-link?
+         l
          (html->xexp (sixth result))))
+
+(define (has-anchor-link? link xexpr)
+  (ormap-xexp (anchor-link-equal? link) xexpr))
 
 ;; does the result contain a form with the specified link as its
 ;; action? Performs a check.
-(define ((has-form-submit-link l) result)
-  (check ormap-xexp
-         (form-submit-link-equal? l)
+(define ((check-form-submit-link l) result)
+  (check has-form-submit-link?
+         l
          (html->xexp (sixth result))))
+
+(define (has-form-submit-link? link xexpr)
+  (ormap-xexp (form-submit-link-equal? link) xexpr))
 
 ;; does the result contain an <a> element with an href whose
 ;; link matches the given pattern
@@ -101,8 +107,8 @@
 
 
 ;; andmap over has-anchor-link. performs checks
-(define ((has-anchor-links ls) result)
-  (for-each (λ (l) ((has-anchor-link l) result)) ls))
+(define ((check-anchor-links ls) result)
+  (for-each (λ (l) ((check-anchor-link l) result)) ls))
 
 ;; andmap over has-anchor-link. returns a boolean rather
 ;; than performing the check.
@@ -110,17 +116,22 @@
   (andmap (λ (l) ((has-anchor-link/bool l) result)) ls))
 
 ;; andmap over has-form-submit-link. performs checks
-(define ((has-form-submit-links ls) result)
-  (for-each (λ (l) ((has-form-submit-link l) result)) ls))
+(define ((check-form-submit-links ls) result)
+  (for-each (λ (l) ((check-form-submit-link l) result)) ls))
 
-(define ((has-iframe-link l) result)
-  (check ormap-xexp
-         (λ (e) (match e
-                  ;; NB fails for <iframe>'s with more than one href...
-                  [(list 'iframe (list '@ _1 ... (list 'src link) _2 ...) _3 ...)
-                   (equal? link l)]
-                  [other #f]))
-         (html->xexp (sixth result))))
+;; check to ensure an iframe link of l
+(define ((check-iframe-link l) result)
+  (check has-iframe-link l (html->xexp (sixth result))))
+
+(define (has-iframe-link link xexpr)
+  (ormap-xexp
+   (λ (e) (match e
+            ;; NB fails for <iframe>'s with more than one href...
+            [(list 'iframe (list '@ _1 ... (list 'src l) _2 ...)
+                   _3 ...)
+             (equal? link l)]
+            [other #f]))
+   xexpr))
 
 
   
@@ -195,6 +206,10 @@
                 '(a (@ (z 4) (href "chrz.,ht")) "ont.h")))
 
   (check-equal? (trim-trailing-slash "/abc/") "/abc")
-  (check-equal? (trim-trailing-slash "/abc") "/abc"))
+  (check-equal? (trim-trailing-slash "/abc") "/abc")
+
+  (check-true ((and/p (λ (x) (< x 3)) (λ (x) (< 0 x))) 2))
+  (check-false ((and/p (λ (x) (< x 3)) (λ (x) (< 0 x))) 6))
+  (check-false ((and/p (λ (x) (< x 3)) (λ (x) (< 0 x))) -1)))
 
   

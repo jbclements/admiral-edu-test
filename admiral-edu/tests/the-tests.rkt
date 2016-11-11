@@ -133,13 +133,13 @@ u must add a summative comment at the end.
 (define names-and-testseqs
   `(("basic"
     (((,m ())
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/" "/test-class/roster/"))))
     ((,m ("assignments"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/author/"))))
     ((,m ("roster"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/roster/upload-roster"
               "/test-class/roster/new-student"
               "/test-class/roster/edit/masteruser@example.com"))))
@@ -159,7 +159,7 @@ u must add a summative comment at the end.
      200
      same-student-again)
     ((,m ("author"))
-     (200 ,(has-anchor-links '("javascript:validate()")))
+     (200 ,(check-anchor-links '("javascript:validate()")))
      author-page)
     ;; NON-REGRESSION: new version better than old
     ((,m ("author") () #t #"assignment-id : zzz1")
@@ -195,13 +195,13 @@ u must add a summative comment at the end.
      good-validate)
     ;; REGRESSION: missing title
     ((,m ("assignments"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/author/"
               "/test-class/assignments/dashboard/a1-ct/"
               "/test-class/assignments/dashboard/test-with-html/"))))
     ;; REGRESSION: missing title
     ((,m ("assignments" "dashboard" "test-with-html"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"
               "/test-class/assignments/status/test-with-html/"
               "/test-class/dependencies/test-with-html/"
@@ -209,7 +209,7 @@ u must add a summative comment at the end.
               "/test-class/export/test-with-html/test-with-html.zip"
               "/test-class/assignments/delete/test-with-html/")))) ;; 15
     ((,m ("dependencies" "test-with-html"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"
               "/test-class/assignments/dashboard/test-with-html/"
               "/test-class/dependencies/test-with-html/tests/student-reviews/"))))
@@ -223,17 +223,17 @@ u must add a summative comment at the end.
           ((namefilevalue #"file-1" #"file-1" () #"abcd")
            (namefilevalue #"file-2" #"grogra-2" () #"efgh")))
          #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"
               "/test-class/assignments/dashboard/test-with-html/"
               "/test-class/dependencies/test-with-html/tests/student-reviews/"))))
     ((,m ("assignments"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/author/"
               "/test-class/assignments/dashboard/a1-ct/"
               "/test-class/assignments/dashboard/test-with-html/"))))
     ((,m ("assignments" "dashboard" "test-with-html"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"
               "/test-class/assignments/status/test-with-html/"
               "/test-class/assignments/open/test-with-html/"
@@ -247,7 +247,7 @@ u must add a summative comment at the end.
      not-open-yet)
     ;; open the assignment
     ((,m ("assignments" "open" "test-with-html"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"
               "/test-class/assignments/status/test-with-html/"
               "/test-class/assignments/close/test-with-html/"
@@ -257,16 +257,16 @@ u must add a summative comment at the end.
               "/test-class/assignments/delete/test-with-html/"))))
     ;; student navigation:
     ((,stu1 ())
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/assignments/"))))
     ((,stu1 ("assignments"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/feedback/test-with-html/"))))
     ((,stu9 ("feedback" "test-with-html"))
      403
      stranger-feedback)
     ((,stu1 ("feedback" "test-with-html"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/next/test-with-html/"))))
     ;; original code just sends you to la-la-land path of your choice:
     ((,stu1 ("feedback" "test-with-html" "BOGUS" "PATH" "ELEMENTS"))
@@ -280,7 +280,7 @@ u must add a summative comment at the end.
              ((namefilevalue #"file" #"my-file" ()
                              #"oh.... \n two lines!\n")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/next/test-with-html/"))))
     ((,stu1 ("next" "test-with-html"))
      (200 ,no-italics)
@@ -291,7 +291,7 @@ u must add a summative comment at the end.
              ((namefilevalue
                #"file" #"my-file" () #"oops... \n two different lines\n")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             ;; FIXME YUCKY URL
             '("/test-class/next/test-with-html/"))))
     ;; re-submit with different file name
@@ -303,26 +303,26 @@ u must add a summative comment at the end.
                              #"oops... \n two different lines\n")))
             #t)
      (200
-      ,(has-anchor-links
+      ,(check-anchor-links
         '("/test-class/next/test-with-html/")))
      stu1-resubmits)
     ((,stu1 ("next" "test-with-html"))
-     (200 ,(begin
-             (has-form-submit-links
-              '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
-             (has-iframe-link
-              "/test-class/next/test-with-html/../../browse/test-with-html/tests/")))
+     (200 ,(and/p
+            (check-form-submit-links
+             '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
+            (check-iframe-link
+             "/test-class/next/test-with-html/../../browse/test-with-html/tests/")))
      stu1-not-yet-published)
     ;; content of the iframe:
     ((,stu1 ("browse" "test-with-html" "tests"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/browse/test-with-html/tests/my-diff%3F%20erent-file"
               ;; update to new style:
               "/test-class/browse-download/test-with-html/tests/my-diff%3F%20erent-file")))
      iframe-content)
     ;; the file 
     ((,stu1 ("browse" "test-with-html" "tests" "my-diff? erent-file"))
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             ;; FIXME how do we feel about this? first relative url path?
             '("../tests"))))
     ;; ouch, what about this:
@@ -362,7 +362,7 @@ u must add a summative comment at the end.
              ((namefilevalue
                #"file" #"a-third-file.arr" () #"zzz\n\nzzz\nzzz\n")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/next/test-with-html/")))
      stu2-submits)
     ;; re-submit of same file with same extension
@@ -371,7 +371,7 @@ u must add a summative comment at the end.
              ((namefilevalue
                #"file" #"a-third-file.arr" () #"zzz\n\nzzz\nzzz\ndcalfine")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/next/test-with-html/")))
      stu2-re-submits)
     ;; can stu2 read stu1's file? No. Good.
@@ -382,7 +382,7 @@ u must add a summative comment at the end.
     ((,stu1 ,(path2list "submit/test-with-html/tests")
             (alist ((action . "submit")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             ;; FIXME yucky url
             '("/test-class/submit/test-with-html/tests/../../../feedback/test-with-html/")))
      stu1-publishes)
@@ -390,7 +390,7 @@ u must add a summative comment at the end.
      ;; FIXME yucky urls
      (200 ,(λ (x)
              (let ([hashes (pending-review-hashes (cons "test-with-html" stu1))])
-               ((has-anchor-links
+               ((check-anchor-links
                  (cons
                   "/test-class/browse/test-with-html/tests/"
                   (map (λ (hash)
@@ -411,13 +411,13 @@ u must add a summative comment at the end.
        `((,stu1 ("review" ,(lastreview stu1)))
          ;; FIXME there's a *space* in there? and in the iframe link too?
          (200 ,(λ (x)
-                 (begin
-                   ((has-anchor-links
+                 (and/p
+                   ((check-anchor-links
                      (list (string-append
                             "/test-class/review/" (lastreview stu1)
                             "/../../review/submit/" (lastreview stu1) "/")))
                     x)
-                   ((has-iframe-link
+                   ((check-iframe-link
                      (string-append
                       "/test-class/review/" (lastreview stu1)
                       "/../../file-container/" (lastreview stu1)))
@@ -441,15 +441,15 @@ u must add a summative comment at the end.
                   r)))))
     ;; stu2 logs in:
     ((,stu2 ())
-     (200 ,(has-anchor-links '("/test-class/assignments/"))))
+     (200 ,(check-anchor-links '("/test-class/assignments/"))))
     ;; clicks on assignments
     ((,stu2 ("assignments"))
-     (200 ,(has-anchor-links '("/test-class/feedback/test-with-html/"))))
+     (200 ,(check-anchor-links '("/test-class/feedback/test-with-html/"))))
     ;; stu2 publishes:
     ((,stu2 ,(path2list "submit/test-with-html/tests")
             (alist ((action . "submit")))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             ;; FIXME yucky urls
             '("/test-class/submit/test-with-html/tests/../../../feedback/test-with-html/")))
      stu2-publishes)
@@ -468,7 +468,7 @@ u must add a summative comment at the end.
     ,(λ ()
        `((,stu2 ("file-container" ,(lastreview-of stu2 stu1)
                                   "my-diff? erent-file"))
-         (200 ,(has-anchor-links '("./")))
+         (200 ,(check-anchor-links '("./")))
          review-iframe-file))
     ;; actual text of file
     ,(λ ()
@@ -499,7 +499,7 @@ u must add a summative comment at the end.
          200))
     ,(λ ()
        `((,stu2 ("review" "submit" ,(lastreview stu2)))
-         (200 ,(has-anchor-links '("/test-class/feedback/test-with-html")))
+         (200 ,(check-anchor-links '("/test-class/feedback/test-with-html")))
          stu2-submits-review2))
     ;; stu1 now views it
     ,(λ ()
@@ -508,7 +508,7 @@ u must add a summative comment at the end.
          stu1-views-review))
     ,(λ ()
        `((, stu1 ("feedback" "file-container" ,(firstfeedback stu1)))
-         (200 ,(has-anchor-links
+         (200 ,(check-anchor-links
                 (list
                  (string-append "/test-class/feedback/file-container/"
                                 (firstfeedback stu1)
@@ -516,7 +516,7 @@ u must add a summative comment at the end.
          stu1-views-review-fc-dir))
     ,(λ ()
        `((,stu1 ("feedback" "file-container" ,(firstfeedback stu1) "my-diff? erent-file"))
-         (200 ,(has-anchor-links
+         (200 ,(check-anchor-links
                 `("./")))
          stu1-views-review-fc-file))
     ,(λ ()
@@ -534,7 +534,7 @@ u must add a summative comment at the end.
          stu1-submits-feedback-xss))
     ,(λ ()
        `((,stu2 ("feedback" "test-with-html"))
-         (200 ,(has-anchor-links
+         (200 ,(check-anchor-links
                 (cons
                  "/test-class/browse/test-with-html/tests/"
                  (for/list ([hash (in-list (completed-review-hashes
@@ -568,50 +568,67 @@ u must add a summative comment at the end.
              ((namefilevalue #"file" #"tiny.zip" ()
                              ,zipfile-bytes)))
             #t)
-     (200 ,(has-anchor-links
+     (200 ,(check-anchor-links
             '("/test-class/next/test-with-html/"))))
     ((,stu3 ("next" "test-with-html"))
      (200
-      ,(begin
-         (has-form-submit-links
+      ,(and/p
+         (check-form-submit-links
           '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
-         (has-iframe-link
+         (check-iframe-link
           "/test-class/next/test-with-html/../../browse/test-with-html/tests/")
          (hasnt-string
           "Your submission contains no files.")))
      stu3-not-yet-published)
     ;; now navigate to subdirectory, then submit
     ))
+    ("bogus submit"
+     (((,m ("roster" "new-student") (alist ((action . "create-student")
+                                            (uid . ,stu1)))
+           #t) 200)
+      ((,stu1 ("submit" "test-with-html" "tests")
+              (multipart
+               ((namefilevalue #"file" #"tiny.zip" ()
+                               ,zipfile-with-dirs-bytes)))
+              #t)
+       404)))
     ("zip with subdirs"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
-                                          (uid . ,stu1)))
-         #t) 200)
-    ((,m ("author" "validate") () #t ,assignment-yaml)
-     200)
-    ((,m ("dependencies" "a1-ct" "tests" "student-reviews" "upload")
-         (multipart
-          ((namefilevalue #"file-1" #"file-1" () #"abcd")
-           (namefilevalue #"file-2" #"grogra-2" () #"efgh")))
-         #t)
-     200)
-    ((,m ("assignments" "open" "a1-ct"))
-     200)
-    ((,stu1 ("submit" "test-with-html" "tests")
-            (multipart
-             ((namefilevalue #"file" #"tiny.zip" ()
-                             ,zipfile-with-dirs-bytes)))
-            #t)
-     200)
-    ((,stu1 ("next" "test-with-html"))
+                                            (uid . ,stu1)))
+           #t) 200)
+      ((,m ("author" "validate") () #t ,assignment-yaml)
+       200)
+      ((,m ("dependencies" "a1-ct" "tests" "student-reviews" "upload")
+           (multipart
+            ((namefilevalue #"file-1" #"file-1" () #"abcd")
+             (namefilevalue #"file-2" #"grogra-2" () #"efgh")))
+           #t)
+       200)
+      ((,m ("assignments" "open" "a1-ct"))
+       200)
+      ((,stu1 ("submit" "a1-ct" "tests")
+              (multipart
+               ((namefilevalue #"file" #"zipwithdirs.zip" ()
+                               ,zipfile-with-dirs-bytes)))
+              #t)
+       200)
+    ((,stu1 ("next" "a1-ct"))
      (200
-      ,(begin
-         (has-form-submit-links
-          '("/test-class/next/test-with-html/../../submit/test-with-html/tests/"))
-         (has-iframe-link
-          "/test-class/next/test-with-html/../../browse/test-with-html/tests/")
+      ,(and/p
+         (check-form-submit-links
+          '("/test-class/next/a1-ct/../../submit/a1-ct/tests/"))
+         (check-iframe-link
+          "/test-class/next/a1-ct/../../browse/a1-ct/tests/")
          (hasnt-string
-          "Your submission contains no files.")))
-     )))
+          "Your submission contains no files."))))
+    ((,stu1 ("browse" "a1-ct" "tests"))
+     (200 ,(check-anchor-links
+            '("/test-class/browse/a1-ct/tests/zz"))))
+    ((,stu1 ("browse" "a1-ct" "tests" "zz"))
+     (200 ,(check-anchor-links
+            '("/test-class/browse/a1-ct/tests/zz/b.txt"))))
+    ((,stu1 ("browse" "a1-ct" "tests" "zz" "b.txt"))
+     200)))
     ("db bug"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))
