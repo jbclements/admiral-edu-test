@@ -108,7 +108,8 @@ must add a summative comment at the end.
   ;; in the codemirror window.
   (printf "Finished setup.\n"))
   
-  
+
+  (run-some-setup)
   (print "Server Started. Type `stop` to kill the server.")
   (newline)
   (flush-output)
