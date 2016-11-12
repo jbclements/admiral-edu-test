@@ -628,7 +628,9 @@ u must add a summative comment at the end.
      (200 ,(check-anchor-links
             '("/test-class/browse/a1-ct/tests/zz/b.txt"))))
     ((,stu1 ("browse" "a1-ct" "tests" "zz" "b.txt"))
-     200)))
+     200)
+    ((,stu1 ("browse" "a1-ct" "tests" "b.txt"))
+     403)))
     ("db bug"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))
