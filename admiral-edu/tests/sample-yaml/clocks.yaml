@@ -1,0 +1,17 @@
+assignment-id: test-assignment
+no-reviews:
+  - sal
+  - sam
+  - stu
+  - suk
+  - san
+does-reviews:
+  - joe
+  - jan
+  - jim
+  - jon
+gets-reviewed:
+  - ace
+  - amy
+  - art
+  - alf
