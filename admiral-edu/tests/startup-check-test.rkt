@@ -1,6 +1,6 @@
 #lang racket
 
-(require admiral-edu/storage/storage-basic
+(require admiral-edu/storage/storage-basic-tr
          admiral-edu/configuration
          admiral-edu/tests/test-configuration
          racket/hash)

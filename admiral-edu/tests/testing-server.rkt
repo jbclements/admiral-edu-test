@@ -8,8 +8,6 @@
            web-server/web-server
            admiral-edu/dispatch
            admiral-edu/base
-           admiral-edu/storage/storage-basic
-           admiral-edu/util/config-file-reader
            net/url
            admiral-edu/tests/test-configuration
            rackunit

@@ -12,7 +12,7 @@
 
 (require admiral-edu/configuration
          admiral-edu/tests/test-configuration
-         admiral-edu/storage/storage-basic
+         admiral-edu/storage/storage-basic-tr
          racket/hash
          rackunit)
 
@@ -46,13 +46,13 @@
     (check-equal? (list-sub-files testing-prefix) '())
     ;; add a file:
     (check-equal? (write-file path1
-                              "this content \n goes in the file.")
+                              #"this content \n goes in the file.")
                   (void))
     ;; check that it's listed:
     (check-equal? (list-sub-files testing-prefix) '("tmp/wobbly-bobbly"))
     ;; check the content:
-    (check-equal? (retrieve-file path1)
-                  "this content \n goes in the file.")
+    (check-equal? (retrieve-file-bytes path1)
+                  #"this content \n goes in the file.")
     ;; delete it:
     (check-equal? (delete-path path1)
                   (void))
@@ -65,7 +65,7 @@
     (delete-file (build-path (local-storage-path) path2))
     (check-false (file-exists? (build-path (local-storage-path) path2)))
     ;; should re-fetch from cloud:
-    (check-equal? (retrieve-file path2) "secondfilecontent")
+    (check-equal? (retrieve-file-bytes path2) "secondfilecontent")
     ;; file exists locally again:
     (check-true (file-exists? (build-path (local-storage-path) path2)))
     ;; should delete all sub-files
