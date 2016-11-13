@@ -21,9 +21,14 @@
 (define (class-name-shim)
   (class-name))
 
-;; loads the testing configuration and initializes the database
-(define (init-shim master-user)
-  (current-configuration (hash-set test-conf "master-user" master-user))
+;; loads the testing configuration and initializes the database.
+;; if master-user is given, set it.
+(define (init-shim [master-user #f])
+  (define conf
+    (cond [master-user
+           (hash-set test-conf "master-user" master-user)]
+          [else test-conf]))
+  (current-configuration conf)
   ;; start with a fresh database
   (db-init))
 

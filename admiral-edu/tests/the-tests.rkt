@@ -47,7 +47,7 @@
 
 
 ;; return the last pending review for given student on "test-with-html"
-(define (lastreview uid)
+(define (lastreview-test-with-html uid)
   (last (pending-review-hashes (cons "test-with-html" uid))))
 
 ;; return the first pending review for given student on "test-with-html"
@@ -56,8 +56,11 @@
 
 ;; return the first pending review for the given student on "test-with-html"
 ;; where the reviewee is the given one
-(define (lastreview-of reviewer reviewee)
-  (last (pending-review-hashes/reviewee (cons "test-with-html" reviewer)
+(define (last-review-testwithhtml-of reviewer reviewee)
+  (last-review-of reviewer reviewee "test-with-html"))
+
+(define (last-review-of reviewer reviewee assignment)
+  (last (pending-review-hashes/reviewee (cons assignment reviewer)
                                         reviewee)))
 
 ;; return the feedback for given student on "test-with-html"
@@ -408,31 +411,31 @@ u must add a summative comment at the end.
      bogus-file-container)
     ;; thunk to delay extraction of hash:
     ,(λ ()
-       `((,stu1 ("review" ,(lastreview stu1)))
+       `((,stu1 ("review" ,(lastreview-test-with-html stu1)))
          ;; FIXME there's a *space* in there? and in the iframe link too?
          (200 ,(λ (x)
                  (and/p
                    ((check-anchor-links
                      (list (string-append
-                            "/test-class/review/" (lastreview stu1)
-                            "/../../review/submit/" (lastreview stu1) "/")))
+                            "/test-class/review/" (lastreview-test-with-html stu1)
+                            "/../../review/submit/" (lastreview-test-with-html stu1) "/")))
                     x)
                    ((check-iframe-link
                      (string-append
-                      "/test-class/review/" (lastreview stu1)
-                      "/../../file-container/" (lastreview stu1)))
+                      "/test-class/review/" (lastreview-test-with-html stu1)
+                      "/../../file-container/" (lastreview-test-with-html stu1)))
                     x))))))
     ;; the iframe...
     ,(λ ()
-       `((,stu1 ("file-container" ,(lastreview stu1)))
+       `((,stu1 ("file-container" ,(lastreview-test-with-html stu1)))
          (200 ,(λ (r)
                  ;; nasty hack here because of nondeterminism; don't know whether
                  ;; file name will be file-1 or grogra-2.
                  (define (make-links filename)
                    (list
-                    (string-append "/test-class/file-container/" (lastreview stu1) "/" filename)
+                    (string-append "/test-class/file-container/" (lastreview-test-with-html stu1) "/" filename)
                     ;; update to new style
-                    (string-append "/test-class/download/" (lastreview stu1) "/" filename)))
+                    (string-append "/test-class/download/" (lastreview-test-with-html stu1) "/" filename)))
                  (define links-1 (make-links "file-1"))
                  (define links-2 (make-links "grogra-2"))
                  (check-pred
@@ -456,49 +459,49 @@ u must add a summative comment at the end.
     ((,stu2 ("feedback" "test-with-html")) 200)
     ;; stu2 clicks on last review
     ,(λ ()
-       `((,stu2 ("review" ,(lastreview-of stu2 stu1)))
+       `((,stu2 ("review" ,(last-review-testwithhtml-of stu2 stu1)))
          200
          review))
     ;; load review file-container for directory
     ,(λ ()
-       `((,stu2 ("file-container" ,(lastreview-of stu2 stu1)))
+       `((,stu2 ("file-container" ,(last-review-testwithhtml-of stu2 stu1)))
          200
          review-iframe-dir))
     ;; file-container for file
     ,(λ ()
-       `((,stu2 ("file-container" ,(lastreview-of stu2 stu1)
+       `((,stu2 ("file-container" ,(last-review-testwithhtml-of stu2 stu1)
                                   "my-diff? erent-file"))
          (200 ,(check-anchor-links '("./")))
          review-iframe-file))
     ;; actual text of file
     ,(λ ()
-       `((,stu2 ("file-container" ,(lastreview-of stu2 stu1) "download"
+       `((,stu2 ("file-container" ,(last-review-testwithhtml-of stu2 stu1) "download"
                                   "my-diff? erent-file"))
          200
          review-iframe-file-content))
     ;; actual text of file using new endpoint:
     ,(λ ()
-       `((,stu2 ("download" ,(lastreview-of stu2 stu1) "my-diff? erent-file"))
+       `((,stu2 ("download" ,(last-review-testwithhtml-of stu2 stu1) "my-diff? erent-file"))
          200
          review-iframe-file-content-new))
     ;; should it be an error to submit bogus rubric json?
     ,(λ ()
-       `((,stu2 ("review" ,(lastreview-of stu2 stu1) "tests" "save")
+       `((,stu2 ("review" ,(last-review-testwithhtml-of stu2 stu1) "tests" "save")
                 (json #"\"abcd\"")
                 #t)
          200))
     ,(λ ()
-       `((,stu2 ("review" "submit" ,(lastreview-of stu2 stu1)))
+       `((,stu2 ("review" "submit" ,(last-review-testwithhtml-of stu2 stu1)))
          200
          stu2-submits-review1))
     ;; do the other review too
     ,(λ ()
-       `((,stu2 ("review" ,(lastreview stu2) "tests" "save")
+       `((,stu2 ("review" ,(lastreview-test-with-html stu2) "tests" "save")
                 (json #"\"abcde\"")
                 #t)
          200))
     ,(λ ()
-       `((,stu2 ("review" "submit" ,(lastreview stu2)))
+       `((,stu2 ("review" "submit" ,(lastreview-test-with-html stu2)))
          (200 ,(check-anchor-links '("/test-class/feedback/test-with-html")))
          stu2-submits-review2))
     ;; stu1 now views it
@@ -592,9 +595,14 @@ u must add a summative comment at the end.
                                ,zipfile-with-dirs-bytes)))
               #t)
        404)))
+    ;; check that links are correctly constructed for zips containing
+    ;; subdirectories.
     ("zip with subdirs"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))
+           #t) 200)
+      ((,m ("roster" "new-student") (alist ((action . "create-student")
+                                            (uid . ,stu2)))
            #t) 200)
       ((,m ("author" "validate") () #t ,assignment-yaml)
        200)
@@ -606,31 +614,42 @@ u must add a summative comment at the end.
        200)
       ((,m ("assignments" "open" "a1-ct"))
        200)
+      ;; student 1 submits zip with subdirs:
       ((,stu1 ("submit" "a1-ct" "tests")
               (multipart
                ((namefilevalue #"file" #"zipwithdirs.zip" ()
                                ,zipfile-with-dirs-bytes)))
               #t)
        200)
-    ((,stu1 ("next" "a1-ct"))
-     (200
-      ,(and/p
-         (check-form-submit-links
-          '("/test-class/next/a1-ct/../../submit/a1-ct/tests/"))
-         (check-iframe-link
-          "/test-class/next/a1-ct/../../browse/a1-ct/tests/")
-         (hasnt-string
-          "Your submission contains no files."))))
-    ((,stu1 ("browse" "a1-ct" "tests"))
-     (200 ,(check-anchor-links
-            '("/test-class/browse/a1-ct/tests/zz"))))
-    ((,stu1 ("browse" "a1-ct" "tests" "zz"))
-     (200 ,(check-anchor-links
-            '("/test-class/browse/a1-ct/tests/zz/b.txt"))))
-    ((,stu1 ("browse" "a1-ct" "tests" "zz" "b.txt"))
-     200)
-    ((,stu1 ("browse" "a1-ct" "tests" "b.txt"))
-     403)))
+      ;; check that links have path included:
+      ((,stu1 ("browse" "a1-ct" "tests" "zz"))
+       (200 ,(check-anchor-links
+              '("/test-class/browse/a1-ct/tests/zz/b.txt"
+                "/test-class/browse/a1-ct/tests/zz/yy"))))
+      ;; stu1 publishes
+      ((,stu1 ,(path2list "submit/a1-ct/tests")
+              (alist ((action . "submit")))
+              #t)
+       200)
+      ;; stu2 submits dontcare
+      ((,stu2 ("submit" "a1-ct" "tests")
+              (multipart
+               ((namefilevalue #"file" #"my-file" ()
+                               #"oh.... \n two lines!\n")))
+              #t)
+       200)
+      ;; stu2 publishes
+      ((,stu2 ,(path2list "submit/a1-ct/tests")
+              (alist ((action . "submit")))
+              #t)
+       200)
+      ,(λ ()
+         `((,stu2 ("file-container" ,(last-review-of stu2 stu1 "a1-ct") "zz"))
+           (200 ,(check-anchor-links
+                  (list
+                   (~a "/test-class/file-container/" (last-review-of stu2 stu1 "a1-ct") "/zz/yy")
+                   (~a "/test-class/file-container/" (last-review-of stu2 stu1 "a1-ct") "/zz/b.txt"))))))
+      ))
     ("db bug"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
                                             (uid . ,stu1)))

@@ -23,6 +23,8 @@
 (module+ test
   (require typed/rackunit)
 
+  (printf "THIS CHECK REQUIRES A NETWORK CONNECTION.\n")
+
   (parameterize ([current-configuration
                   (modified-test-conf
                    (hash "storage-mode" "cloud-storage"
