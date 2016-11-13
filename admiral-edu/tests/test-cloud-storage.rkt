@@ -18,21 +18,24 @@
 
 (define testing-prefix "tmp")
 
+(define CLOUD-SERVER "storage.googleapis.com")
+(define TEST-BUCKET "cloud-storage-test-bucket/")
+
 (provide
  (contract-out [run-tests
-                (-> string? string? string? string? string? void?)]))
+                (-> string? string? string? void?)]))
 
 (define (add-testing-prefix str)
   (path->string (build-path testing-prefix str)))
 
-(define (run-tests local-tmp-dir cloud-server bucket access-id secret)
+(define (run-tests local-tmp-dir access-id secret)
   (define cloud-conf
     (hash-union
      #:combine (λ (a b) b)
      test-conf
      (hash "cloud-access-key-id" access-id
-           "cloud-host" cloud-server
-           "bucket" bucket
+           "cloud-host" CLOUD-SERVER
+           "bucket" TEST-BUCKET
            "storage-mode" "cloud-storage"
            "cloud-secret-key" secret
            "local-storage-path" local-tmp-dir)))
@@ -42,6 +45,7 @@
   (define path2 (add-testing-prefix "zabba/dabba/trog"))
   
   (parameterize ([current-configuration cloud-conf])
+    (delete-path testing-prefix)
     ;; it starts empty:
     (check-equal? (list-sub-files testing-prefix) '())
     ;; add a file:
@@ -58,14 +62,14 @@
                   (void))
     ;; check that there are no files:
     (check-equal? (list-sub-files testing-prefix) '())
-    (check-equal? (write-file path2 "secondfilecontent")
+    (check-equal? (write-file path2 #"secondfilecontent")
                   (void))
     ;; delete local copy only:
     (check-true (file-exists? (build-path (local-storage-path) path2)))
     (delete-file (build-path (local-storage-path) path2))
     (check-false (file-exists? (build-path (local-storage-path) path2)))
     ;; should re-fetch from cloud:
-    (check-equal? (retrieve-file-bytes path2) "secondfilecontent")
+    (check-equal? (retrieve-file-bytes path2) #"secondfilecontent")
     ;; file exists locally again:
     (check-true (file-exists? (build-path (local-storage-path) path2)))
     ;; should delete all sub-files

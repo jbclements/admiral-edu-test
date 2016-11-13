@@ -91,7 +91,8 @@
   (map make-student (list ACE AMY ART ALF JOE JAN JIM JON SAL SAM STU SUE SID))
   (create-or-save-assignment three-test-assignment2 #t)
   (write-file (dependency-file-name "test-assignment2")
-              (file-contents "test-assignment2.yaml"))
+              (string->bytes/utf-8
+               (file-contents "test-assignment2.yaml")))
   (save-assignment-description (class-name) "test-assignment2"
                                (file-contents "test-assignment-description2.yaml")))
 
