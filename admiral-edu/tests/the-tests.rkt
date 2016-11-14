@@ -325,9 +325,12 @@ u must add a summative comment at the end.
      iframe-content)
     ;; the file 
     ((,stu1 ("browse" "test-with-html" "tests" "my-diff? erent-file"))
-     (200 ,(check-anchor-links
-            ;; FIXME how do we feel about this? first relative url path?
-            '("../tests"))))
+     (200 ,(and/p
+            (check-anchor-links
+             ;; FIXME how do we feel about this? first relative url path?
+             '("../tests"))
+            (has-string
+             "'/test-class/browse-download/test-with-html/tests/my-diff%3F%20erent-file'"))))
     ;; ouch, what about this:
     ((,stu1
       ("browse" "test-with-html" "tests" "my-diff? erent-file" "download" "test-class"
@@ -471,7 +474,12 @@ u must add a summative comment at the end.
     ,(λ ()
        `((,stu2 ("file-container" ,(last-review-testwithhtml-of stu2 stu1)
                                   "my-diff? erent-file"))
-         (200 ,(check-anchor-links '("./")))
+         (200 ,(and/p
+                (check-anchor-links '("./"))
+                (has-string
+                 (~a "'/test-class/download/"
+                     (last-review-testwithhtml-of stu2 stu1)
+                     "/my-diff%3F%20erent-file'"))))
          review-iframe-file))
     ;; actual text of file
     ,(λ ()
@@ -519,8 +527,13 @@ u must add a summative comment at the end.
          stu1-views-review-fc-dir))
     ,(λ ()
        `((,stu1 ("feedback" "file-container" ,(firstfeedback stu1) "my-diff? erent-file"))
-         (200 ,(check-anchor-links
-                `("./")))
+         (200 ,(and/p
+                (check-anchor-links
+                 `("./"))
+                (has-string
+                 (~a "'/test-class/download/"
+                     (firstfeedback stu1)
+                     "/my-diff%3F%20erent-file'"))))
          stu1-views-review-fc-file))
     ,(λ ()
        `((,stu1 ("download" ,(firstfeedback stu1) "my-diff? erent-file"))
