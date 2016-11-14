@@ -54,6 +54,8 @@
                   (void))
     ;; check that it's listed:
     (check-equal? (list-sub-files testing-prefix) '("tmp/wobbly-bobbly"))
+    (check-equal? (list-files testing-prefix) '("wobbly-bobbly"))
+    (check-equal? (list-dirs testing-prefix) '())
     ;; check the content:
     (check-equal? (retrieve-file-bytes path1)
                   #"this content \n goes in the file.")
@@ -64,6 +66,8 @@
     (check-equal? (list-sub-files testing-prefix) '())
     (check-equal? (write-file path2 #"secondfilecontent")
                   (void))
+    (check-equal? (list-files testing-prefix) '())
+    (check-equal? (list-dirs testing-prefix) '("zabba"))
     ;; delete local copy only:
     (check-true (file-exists? (build-path (local-storage-path) path2)))
     (delete-file (build-path (local-storage-path) path2))

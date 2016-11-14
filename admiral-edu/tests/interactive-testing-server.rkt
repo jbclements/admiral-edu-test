@@ -4,6 +4,7 @@
 ;; without apache or docker
 (module+ main
   (require racket/match
+           racket/file
            web-server/servlet-dispatch
            (prefix-in sequence:
                       web-server/dispatchers/dispatch-sequencer)
@@ -14,13 +15,25 @@
            admiral-edu/dispatch
            admiral-edu/base
            admiral-edu/auth/google-openidc
-           "testing-shim.rkt")
+           "testing-shim.rkt"
+           admiral-edu/tests/test-configuration
+           )
 
   (define STATIC-FILES-ROOT
     "/Users/clements/admiral-edu/html")
   
   ;; config and delete everything in the database
   (init-shim)
+
+  (define ACCESS-ID (file->value "/tmp/api-key.rktd"))
+  (define SECRET-KEY (file->value "/tmp/api-secret.rktd"))
+  (current-configuration
+   (modified-test-conf (make-immutable-hash
+                        `(("cloud-access-key-id" . ,ACCESS-ID)
+                          ("cloud-host" . "storage.googleapis.com")
+                          ("bucket" . "cp-test-class/")
+                          ("storage-mode" . "cloud-storage")
+                          ("cloud-secret-key" . ,SECRET-KEY)))))
   
   ;; delete local files
   (delete-local-files-shim)
