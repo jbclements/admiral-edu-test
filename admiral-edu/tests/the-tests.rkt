@@ -48,7 +48,10 @@
 
 ;; return the last pending review for given student on "test-with-html"
 (define (lastreview-test-with-html uid)
-  (last (pending-review-hashes (cons "test-with-html" uid))))
+  (lastreview uid "test-with-html"))
+
+(define (lastreview uid assignment)
+  (last (pending-review-hashes (cons assignment uid))))
 
 ;; return the first pending review for given student on "test-with-html"
 (define (firstreview uid)
@@ -64,8 +67,11 @@
                                         reviewee)))
 
 ;; return the feedback for given student on "test-with-html"
-(define (firstfeedback uid)
-  (first (feedback-hashes (cons "test-with-html" uid))))
+(define (firstfeedback-testwithhtml uid)
+  (firstfeedback uid "test-with-html"))
+
+(define (firstfeedback uid assignment)
+  (first (feedback-hashes (cons assignment uid))))
 
 ;; return the feedback for given student on "test-with-html"
 (define (lastfeedback uid)
@@ -514,34 +520,34 @@ u must add a summative comment at the end.
          stu2-submits-review2))
     ;; stu1 now views it
     ,(λ ()
-       `((,stu1 ("feedback" "view" ,(firstfeedback stu1)))
+       `((,stu1 ("feedback" "view" ,(firstfeedback-testwithhtml stu1)))
          200
          stu1-views-review))
     ,(λ ()
-       `((, stu1 ("feedback" "file-container" ,(firstfeedback stu1)))
+       `((, stu1 ("feedback" "file-container" ,(firstfeedback-testwithhtml stu1)))
          (200 ,(check-anchor-links
                 (list
                  (string-append "/test-class/feedback/file-container/"
-                                (firstfeedback stu1)
+                                (firstfeedback-testwithhtml stu1)
                                 "/my-diff%3F%20erent-file"))))
          stu1-views-review-fc-dir))
     ,(λ ()
-       `((,stu1 ("feedback" "file-container" ,(firstfeedback stu1) "my-diff? erent-file"))
+       `((,stu1 ("feedback" "file-container" ,(firstfeedback-testwithhtml stu1) "my-diff? erent-file"))
          (200 ,(and/p
                 (check-anchor-links
                  `("./"))
                 (has-string
                  (~a "'/test-class/download/"
-                     (firstfeedback stu1)
+                     (firstfeedback-testwithhtml stu1)
                      "/my-diff%3F%20erent-file'"))))
          stu1-views-review-fc-file))
     ,(λ ()
-       `((,stu1 ("download" ,(firstfeedback stu1) "my-diff? erent-file"))
+       `((,stu1 ("download" ,(firstfeedback-testwithhtml stu1) "my-diff? erent-file"))
          ;; need a check that this is a file-download-y thing and not HTML:
          200
          stu1-views-review-fc-file-raw))
     ,(λ ()
-       `((,stu1 ("feedback" "view" ,(firstfeedback stu1))
+       `((,stu1 ("feedback" "view" ,(firstfeedback-testwithhtml stu1))
                 (alist
                  ((feedback . "feedback with <i>italics</i>.")
                   (flag . "goronsky")))
@@ -662,6 +668,65 @@ u must add a summative comment at the end.
                   (list
                    (~a "/test-class/file-container/" (last-review-of stu2 stu1 "a1-ct") "/zz/yy")
                    (~a "/test-class/file-container/" (last-review-of stu2 stu1 "a1-ct") "/zz/b.txt"))))))
+      ;; stu2 submits review
+      ,(λ ()
+       `((,stu2 ("review" ,(last-review-of stu2 stu1 "a1-ct") "tests" "save")
+                (json #"\"abcd\"")
+                #t)
+         200))
+    ,(λ ()
+       `((,stu2 ("review" "submit" ,(last-review-of stu2 stu1 "a1-ct")))
+         200
+         stu2-submits-review1))
+    ;; other review
+    ,(λ ()
+       `((,stu2 ("review" ,(lastreview stu2 "a1-ct") "tests" "save")
+                (json #"\"abcde\"")
+                #t)
+         200))
+    ,(λ ()
+       `((,stu2 ("review" "submit" ,(lastreview stu2 "a1-ct")))
+         200
+         stu2-submits-review2))
+    ,(λ ()
+       `((,stu1 ("feedback" "view" ,(firstfeedback stu1 "a1-ct")))
+         (200 ,(check-iframe-link
+                ;; FIXME gross url:
+                (~a "/test-class/feedback/view/" (firstfeedback stu1 "a1-ct")
+                    "/../../file-container/" (firstfeedback stu1 "a1-ct"))))
+         stu1-views-review))
+    ,(λ ()
+       `((, stu1 ("feedback" "file-container" ,(firstfeedback stu1 "a1-ct")))
+         (200 ,(check-anchor-links
+                (list
+                 (string-append "/test-class/feedback/file-container/"
+                                (firstfeedback stu1 "a1-ct") "/zz"))))
+         stu1-views-review-fc-dir))
+    ,(λ ()
+       `((, stu1 ("feedback" "file-container" ,(firstfeedback stu1 "a1-ct") "zz"))
+         (200 ,(check-anchor-links
+                (list
+                 (string-append "/test-class/feedback/file-container/"
+                                (firstfeedback stu1 "a1-ct") "/zz/yy")
+                 (string-append "/test-class/feedback/file-container/"
+                                (firstfeedback stu1 "a1-ct") "/zz/b.txt"))))
+         stu1-views-review-fc-dir))
+    ,(λ ()
+       `((,stu1 ("feedback" "file-container" ,(firstfeedback stu1 "a1-ct") "zz" "b.txt"))
+         (200 ,(and/p
+                (check-anchor-links
+                 `(".././"
+                   "../zz"))
+                (has-string
+                 (~a "'/test-class/download/"
+                     (firstfeedback stu1 "a1-ct")
+                     "/zz/b.txt'"))))
+         stu1-views-review-fc-file))
+    ,(λ ()
+       `((,stu1 ("download" ,(firstfeedback stu1 "a1-ct") "zz/b.txt"))
+         ;; need a check that this is a file-download-y thing and not HTML:
+         (200 ,(has-string "this is b"))
+         stu1-views-review-fc-file-raw))
       ))
     ("db bug"
      (((,m ("roster" "new-student") (alist ((action . "create-student")
